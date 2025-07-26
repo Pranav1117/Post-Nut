@@ -1,26 +1,34 @@
 import axios from "axios";
 
 const GEMINI_KEY = process.env.GEMINI_KEY;
-const IDENTIFY_GENRE_PROMPT = process.env.IDENTIFY_GENRE_PROMPT;
+const PROMPT = process.env.GENERATE_TWEET_PROMPT;
 
-export const identifyPostGenre = async (userInput: string) => {
+export const generateTweet = async (userInput: string) => {
   const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_KEY}`;
-  // const url = `http://localhost:3001/dummyres/`;
+
+  // structure of payload to send to AI model
   const payload = {
     contents: [
       {
-        parts: [{ text: `${IDENTIFY_GENRE_PROMPT} ${userInput}` }],
+        parts: [{ text: `${PROMPT} ${userInput}` }],
       },
     ],
   };
+
   try {
     const initialResponse = await axios.post(url, payload, {
       headers: {
         "Content-Type": "application/json",
       },
     });
-    // const response = await initialResponse.json();
-    return initialResponse.data;
+    
+    // this is structure gemini return response
+    // console.log("response from Model", initialResponse.data.candidates[0].content.parts[0].text);
+  
+    const response = await initialResponse.data.candidates[0].content.parts[0].text;
+    const finalRes = await response.replace(/^.*?(?=\n|Wake|I|Let's|Stop|Start)/s, "").trim();
+
+    return finalRes;
   } catch (error) {
     console.log("error", error);
   }
